@@ -1,0 +1,29 @@
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Python ----
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ---- App-generated files (private user data) ----
+backend/uploads/
+backend/reports/
+backend/generated/
+
+# ---- OS / editor / temp ----
+.DS_Store
+*.log
+*.tmp
+.vscode/
+.idea/
