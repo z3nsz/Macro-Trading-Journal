@@ -12,8 +12,12 @@ Legend: ✅ done · ⏳ in progress · ⬜ not started
 - ⬜ 2b (optional) app layout shell: navigation for Journal / Analytics / Dashboard / Reports
 
 ## Phase 3 — PostgreSQL + migrations
-- ⬜ Install PostgreSQL locally (Homebrew), create dev + test databases
-- ⬜ SQLAlchemy engine/session, Alembic init, first migration
+- ✅ PostgreSQL 18 via Homebrew (`brew services`), role `macro_journal`,
+  databases `macro_journal` (dev) and `macro_journal_test` (tests)
+- ✅ SQLAlchemy engine/session (`app/db.py`), `Base` with naming conventions
+- ✅ Alembic configured to read the URL from `.env`; migration 001 creates `users`
+- ✅ Health endpoint + UI report database connected / unavailable
+- ✅ Tests rebuild the test DB from migrations and roll back each test (5 passing)
 
 ## Phase 4 — Journal (local dev user)
 - ⬜ Portfolios, instruments (stocks + futures metadata), trades, executions

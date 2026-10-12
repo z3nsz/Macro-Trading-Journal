@@ -37,3 +37,33 @@ Short explanations of concepts as they come up in the project.
   so a typo like `data.sever_time` is caught at build time.
 - **Environment variables / `.env`**: configuration and secrets kept outside the code.
   `.env` is git-ignored; `.env.example` shows which variables exist, with placeholders.
+
+## Milestone 3 — PostgreSQL & migrations
+
+- **Database server**: PostgreSQL is its own program (port 5432). The backend connects to it like a client.
+  `brew services start/stop postgresql@18` controls it.
+- **Role**: a database login. We use a dedicated `macro_journal` role instead of an admin account,
+  so the app only has the permissions it needs.
+- **Table / row / column**: like a spreadsheet tab, its rows, and its typed headers.
+- **Primary key**: a unique ID for each row (`users.id`). **Unique index**: the database itself
+  refuses two users with the same email — a rule enforced even if app code has a bug.
+- **`timestamp with time zone`**: we always store moments in time with a timezone (UTC inside Postgres).
+  Essential for trade timestamps across markets.
+- **ORM (SQLAlchemy)**: lets us write `User(email=...)` in Python instead of raw SQL.
+  A **model** is a Python class that describes one table.
+- **Session**: one unit of work with the database. `flush` sends changes; `commit` makes them permanent;
+  `rollback` throws them away.
+- **Dependency injection (`Depends(get_db)`)**: FastAPI creates a session for each request, passes it
+  into the endpoint, and closes it afterwards — endpoints never manage connections themselves.
+- **Connection pool**: the backend keeps a few database connections open and reuses them (faster).
+  Side effect we saw: PostgreSQL's normal ("smart") shutdown waits for those idle connections;
+  `pg_ctl stop -m fast` disconnects them. `pool_pre_ping=True` lets the app recover automatically
+  when the database comes back.
+- **Migration**: a versioned script with `upgrade()` and `downgrade()`.
+  Alembic stores the current version in a table called `alembic_version`.
+  Workflow: edit a model → `alembic revision --autogenerate -m "..."` → **read the generated file** →
+  `alembic upgrade head`. Autogenerate is a draft, not gospel — always review it.
+- **Test database**: tests use `macro_journal_test`, rebuilt from migrations on each run.
+  Each test runs inside a transaction that is rolled back, so tests never affect each other or real data.
+- **Graceful degradation**: if the database is down, `/api/health` still answers (`"degraded"`) instead
+  of crashing. The same principle will keep the journal working when market-data providers fail.

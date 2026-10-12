@@ -1,6 +1,6 @@
 """Application settings, read from environment variables (or backend/.env).
 
-Secrets such as API keys will live here later. They are never sent to the frontend.
+Secrets such as API keys and database passwords live here. They are never sent to the frontend.
 """
 
 from pathlib import Path
@@ -16,6 +16,11 @@ class Settings(BaseSettings):
 
     app_name: str = "Macro Trading Journal"
     environment: str = "development"
+
+    # Format: postgresql+psycopg://USER:PASSWORD@HOST:PORT/DATABASE
+    database_url: str = "postgresql+psycopg://macro_journal@localhost:5432/macro_journal"
+    # Separate database that the test suite is allowed to wipe.
+    test_database_url: str = "postgresql+psycopg://macro_journal@localhost:5432/macro_journal_test"
 
 
 settings = Settings()

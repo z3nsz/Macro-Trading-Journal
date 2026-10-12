@@ -35,14 +35,23 @@ export function BackendStatus() {
     )
   }
 
+  const dbOk = data.database === 'connected'
+
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
       <p className="font-semibold text-emerald-700">Backend connected</p>
+      {!dbOk && (
+        <p className="mt-2 rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-800">
+          Database unavailable — is PostgreSQL running?
+        </p>
+      )}
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm text-emerald-900">
         <dt className="text-emerald-700">App</dt>
         <dd>{data.app}</dd>
         <dt className="text-emerald-700">Environment</dt>
         <dd>{data.environment}</dd>
+        <dt className="text-emerald-700">Database</dt>
+        <dd className={dbOk ? '' : 'font-semibold text-amber-700'}>{data.database}</dd>
         <dt className="text-emerald-700">Server time</dt>
         <dd>{new Date(data.server_time).toLocaleString()}</dd>
       </dl>

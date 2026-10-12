@@ -6,7 +6,7 @@ export default function App() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 py-4">
           <h1 className="text-xl font-bold">Macro Trading Journal</h1>
-          <p className="text-sm text-slate-500">Milestone 2a — frontend ↔ backend connection</p>
+          <p className="text-sm text-slate-500">Milestone 3 — frontend ↔ backend ↔ database</p>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-6">
