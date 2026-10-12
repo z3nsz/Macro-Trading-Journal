@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { listPortfolios, listTrades } from '../api/journal'
 import type { Direction, Trade, TradeFilters, TradeStatus } from '../api/types'
-import { formatDateTime, formatPrice, trimDecimal } from '../lib/format'
+import { formatDateTime, formatMoney, formatPrice, formatR, pnlColor, trimDecimal } from '../lib/format'
 import { firstEntry, firstExit, instrumentLabel, tradeDate } from '../lib/trade'
 import { Button, Card, DirectionBadge, EmptyState, ErrorBox, Input, Loading, Select, StatusBadge } from '../components/ui'
 
@@ -100,7 +100,7 @@ export function TradesPage() {
         <>
           <TradeTable trades={trades.data} />
           <TradeCards trades={trades.data} />
-          <p className="text-xs text-slate-500">{trades.data.length} trade(s). P&amp;L and R-multiples arrive in Milestone 5.</p>
+          <p className="text-xs text-slate-500">{trades.data.length} trade(s). Net P&amp;L is after fees; R = net P&amp;L ÷ initial dollar risk. “—” = not available (hover for why).</p>
         </>
       )}
     </div>
@@ -114,7 +114,7 @@ function TradeTable({ trades }: { trades: Trade[] }) {
       <table className="w-full text-sm">
         <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
           <tr>
-            {['Date', 'Instrument', 'Side', 'Qty', 'Entry', 'Stop', 'Exit', 'Status', 'Portfolio', 'Strategy'].map((h) => (
+            {['Date', 'Instrument', 'Side', 'Qty', 'Entry', 'Stop', 'Exit', 'Net P&L', 'R', 'Status', 'Portfolio', 'Strategy'].map((h) => (
               <th key={h} className="px-3 py-2 font-medium">{h}</th>
             ))}
           </tr>
@@ -135,6 +135,12 @@ function TradeTable({ trades }: { trades: Trade[] }) {
                 <td className="px-3 py-2">{formatPrice(entry?.price ?? t.planned_entry_price, fmt)}{!entry && t.planned_entry_price && <span className="text-xs text-slate-400"> plan</span>}</td>
                 <td className="px-3 py-2">{formatPrice(t.initial_stop_price, fmt)}</td>
                 <td className="px-3 py-2">{formatPrice(exit?.price, fmt)}</td>
+                <td className={`whitespace-nowrap px-3 py-2 font-medium ${pnlColor(t.metrics.net_realized_pnl)}`} title={t.metrics.unavailable.realized_pnl}>
+                  {formatMoney(t.metrics.net_realized_pnl)}
+                </td>
+                <td className={`px-3 py-2 ${pnlColor(t.metrics.realized_r)}`} title={t.metrics.unavailable.realized_r}>
+                  {formatR(t.metrics.realized_r)}
+                </td>
                 <td className="px-3 py-2"><StatusBadge status={t.status} /></td>
                 <td className="px-3 py-2 text-slate-600">{t.portfolio.name}</td>
                 <td className="px-3 py-2 text-slate-600">{t.strategy?.name ?? '—'}</td>
@@ -168,6 +174,11 @@ function TradeCards({ trades }: { trades: Trade[] }) {
                   {' · '}stop {formatPrice(t.initial_stop_price, fmt)}
                   {exit && <> · exit {formatPrice(exit.price, fmt)}</>}
                 </p>
+                {t.metrics.net_realized_pnl && (
+                  <p className={`text-sm font-medium ${pnlColor(t.metrics.net_realized_pnl)}`}>
+                    {formatMoney(t.metrics.net_realized_pnl)} · {formatR(t.metrics.realized_r)}
+                  </p>
+                )}
                 <p className="text-xs text-slate-500">{formatDateTime(tradeDate(t))} · {t.portfolio.name}</p>
               </Card>
             </Link>

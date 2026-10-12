@@ -291,3 +291,32 @@ def test_cannot_use_another_users_strategy(client, setup, bob, alice):
     act_as(alice)
     r = client.post("/api/trades", json=es_trade(portfolio, contract, strategy_id=bobs_strategy["id"]))
     assert r.status_code == 404
+
+
+# ---- calculated metrics in API responses -------------------------------------------------------
+
+def test_trade_response_includes_worked_example_metrics(client, setup):
+    portfolio, contract = setup
+    body = es_trade(
+        portfolio, contract,
+        entry={"price": "5000.25", "executed_at": ENTRY_TIME, "fees": "4.20"},
+        exit={"price": "5040.50", "executed_at": EXIT_TIME, "fees": "4.20"},
+    )
+    m = client.post("/api/trades", json=body).json()["metrics"]
+    assert [Decimal(t["reward_to_risk"]) for t in m["targets"]] == [Decimal("2.00"), Decimal("3.00")]
+    assert Decimal(m["initial_risk_amount"]) == Decimal("2025.00")
+    assert Decimal(m["gross_realized_pnl"]) == Decimal("4025.00")
+    assert Decimal(m["net_realized_pnl"]) == Decimal("4016.60")
+    assert Decimal(m["realized_r"]) == Decimal("1.98")
+    assert m["unrealized_pnl"] is None
+    assert m["unavailable"]["unrealized_pnl"] == "No open position."
+
+
+def test_open_trade_metrics_explain_what_is_missing(client, setup):
+    portfolio, contract = setup
+    body = es_trade(portfolio, contract, entry={"price": "5000", "executed_at": ENTRY_TIME})
+    m = client.get(f"/api/trades/{client.post('/api/trades', json=body).json()['id']}").json()["metrics"]
+    assert m["net_realized_pnl"] is None
+    assert m["unavailable"]["realized_pnl"] == "No exits yet."
+    assert m["unavailable"]["unrealized_pnl"] == "No market price available."
+    assert Decimal(m["initial_risk_amount"]) == Decimal("2000.00")

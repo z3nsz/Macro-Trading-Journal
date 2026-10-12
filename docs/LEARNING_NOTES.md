@@ -132,3 +132,29 @@ Short explanations of concepts as they come up in the project.
 - **Deriving instead of syncing**: rather than an effect that copies "first portfolio" into state, we
   compute `form.portfolio_id || firstPortfolio` during render — simpler and avoids an extra render.
 - **Money formatting**: fees display as `$4.20` with string-based formatting, never `$4.2`.
+
+## Milestone 5 — Risk & P&L calculations
+
+**Worked example** — ES long 2 contracts, m = $50. Plan: entry 5000, stop 4980, TP1 5040, TP2 5060.
+
+| Step | Calculation | Result |
+|---|---|---|
+| Planned R:R TP1 / TP2 | 40 ÷ 20, 60 ÷ 20 | 2.00 / 3.00 |
+| Initial risk (filled 5000.25) | 20.25 × 2 × $50 | $2,025.00 |
+| Gross (exit 2 @ 5040.50) | 40.25 × 2 × $50 | $4,025.00 |
+| Net (fees 4.20 + 4.20) | 4,025.00 − 8.40 | $4,016.60 |
+| Realized R | 4,016.60 ÷ 2,025.00 | 1.98R |
+| Partial: exit 1 @ 5040 | 1,987.50 − (4.20 + 2.10) | $1,981.20 = 0.98R so far |
+
+- **Planned vs. realized**: planned R:R comes from the plan (2.00 at TP1); realized R from what happened
+  (1.98, lower because of slippage and fees). Keeping both lets you see execution quality.
+- **R-multiple**: results measured in units of the risk you took. +2R means you made twice what you risked.
+  It makes a $50 trade in MES comparable with a $5,000 trade in ES.
+- **Weighted average**: 1 contract @ 5000 + 3 @ 5004 = average 5003 (each fill weighted by its quantity).
+- **Fee allocation on partial exits**: only the closed share of entry fees is counted now; the rest is
+  counted when the remaining position closes.
+- **Rounding**: calculate at full precision, round money once at the end (half-up: 515.625 → 515.63).
+  Rounding in the middle accumulates errors.
+- **Unavailable ≠ zero**: a trade without a stop has no defined R. Showing 0R would be a lie that also
+  distorts averages later, so we return null plus a reason.
+- **Single source of truth**: the frontend never re-calculates; it displays the backend's numbers.

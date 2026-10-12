@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatMoney, formatPrice, isoToLocalInput, localInputToIso, toThirtySeconds, trimDecimal } from './format'
+import { formatMoney, formatPrice, formatR, pnlColor, isoToLocalInput, localInputToIso, toThirtySeconds, trimDecimal } from './format'
 
 describe('trimDecimal', () => {
   it('removes trailing zeros without float rounding', () => {
@@ -47,5 +47,18 @@ describe('formatMoney', () => {
     expect(formatMoney('100000.00')).toBe('$100,000.00')
     expect(formatMoney('-1234.5')).toBe('-$1,234.50')
     expect(formatMoney('0')).toBe('$0.00')
+  })
+})
+
+describe('formatR and pnlColor', () => {
+  it('labels R multiples', () => {
+    expect(formatR('1.98')).toBe('1.98R')
+    expect(formatR(null)).toBe('—')
+  })
+  it('colors gains, losses and zero', () => {
+    expect(pnlColor('4016.60')).toBe('text-emerald-700')
+    expect(pnlColor('-2000.00')).toBe('text-red-700')
+    expect(pnlColor('0.00')).toBe('text-slate-500')
+    expect(pnlColor(null)).toBe('text-slate-500')
   })
 })

@@ -34,22 +34,22 @@ def list_trades(
         instrument_id=instrument_id, strategy_id=strategy_id, q=q, date_from=date_from, date_to=date_to,
         limit=limit, offset=offset,
     )
-    return service.list_trades(db, user, filters)
+    return [service.to_trade_out(t) for t in service.list_trades(db, user, filters)]
 
 
 @router.post("/trades", response_model=TradeOut, status_code=status.HTTP_201_CREATED)
 def create_trade(data: TradeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return service.create_trade(db, user, data)
+    return service.to_trade_out(service.create_trade(db, user, data))
 
 
 @router.get("/trades/{trade_id}", response_model=TradeOut)
 def get_trade(trade_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return service.get_owned_trade(db, user, trade_id)
+    return service.to_trade_out(service.get_owned_trade(db, user, trade_id))
 
 
 @router.put("/trades/{trade_id}", response_model=TradeOut)
 def replace_trade(trade_id: int, data: TradeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return service.replace_trade(db, user, trade_id, data)
+    return service.to_trade_out(service.replace_trade(db, user, trade_id, data))
 
 
 @router.delete("/trades/{trade_id}", status_code=status.HTTP_204_NO_CONTENT)

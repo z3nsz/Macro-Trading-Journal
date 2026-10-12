@@ -22,6 +22,18 @@ export function formatMoney(value: string | null | undefined): string {
   return `${negative ? '-' : ''}$${grouped}.${cents}`
 }
 
+/** "1.98" -> "1.98R", "-1.00" -> "-1.00R". */
+export function formatR(value: string | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '—'
+  return `${value}R`
+}
+
+/** Tailwind text color for a signed number string: green gain, red loss, gray zero/missing. */
+export function pnlColor(value: string | null | undefined): string {
+  if (!value || /^-?0*\.?0*$/.test(value)) return 'text-slate-500'
+  return value.startsWith('-') ? 'text-red-700' : 'text-emerald-700'
+}
+
 /**
  * Treasury futures are quoted in points and 32nds:
  *   ZB  thirty_seconds:       112.53125  -> "112'17"     (17/32)

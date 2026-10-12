@@ -11,10 +11,11 @@ from decimal import Decimal
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.domain.calculations import FillData, TradeMetrics, calculate_trade_metrics
 from app.domain.trade_rules import Fill, RuleViolation, TradeDraft, derive_status, validate_trade
 from app.errors import ConflictError, NotFoundError, RulesViolated
 from app.models import Execution, FuturesContract, Instrument, Portfolio, Trade, TradeTarget, User
-from app.schemas.trade import FillIn, TradeIn
+from app.schemas.trade import FillIn, TradeBase, TradeIn, TradeMetricsOut, TradeOut
 from app.services.instruments import get_instrument
 from app.services.portfolios import get_owned_portfolio, get_owned_strategy
 
@@ -140,6 +141,27 @@ def replace_trade(db: Session, user: User, trade_id: int, data: TradeIn) -> Trad
 def delete_trade(db: Session, user: User, trade_id: int) -> None:
     db.delete(get_owned_trade(db, user, trade_id))
     db.commit()
+
+
+# ---- output -----------------------------------------------------------------------------------
+
+def trade_metrics(trade: Trade) -> TradeMetrics:
+    """Run the pure calculations on a stored trade. No market data yet, so no unrealized P&L."""
+    return calculate_trade_metrics(
+        direction=trade.direction,
+        point_value=trade.instrument.point_value,
+        planned_quantity=trade.planned_quantity,
+        planned_entry_price=trade.planned_entry_price,
+        initial_stop_price=trade.initial_stop_price,
+        target_prices=[t.price for t in trade.targets],
+        fills=[FillData(e.kind, e.price, e.quantity, e.fees) for e in trade.executions],
+        market_price=None,
+    )
+
+
+def to_trade_out(trade: Trade) -> TradeOut:
+    base = TradeBase.model_validate(trade)
+    return TradeOut(**dict(base), metrics=TradeMetricsOut.model_validate(trade_metrics(trade)))
 
 
 # ---- helpers ----------------------------------------------------------------------------------

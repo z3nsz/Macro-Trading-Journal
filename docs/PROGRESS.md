@@ -37,6 +37,12 @@ Legend: ✅ done · ⏳ in progress · ⬜ not started
 - ⬜ Later: attachments/screenshots (needs upload validation), tags, stop-change history, options
 
 ## Phase 5 — Risk & P&L calculations
+- ✅ Pure module `app/domain/calculations.py`: planned R:R per target, planned risk, initial dollar risk,
+  weighted average entry/exit, gross/net realized P&L with proportional entry-fee allocation, realized R,
+  unrealized P&L (requires a sourced market price), explicit "unavailable" reasons.
+- ✅ 19 calculation tests (worked example, partial exit, short, scaling in, multiple exits, corn cents,
+  ZN half-cent rounding, fractional shares, missing stop, unrealized) + 2 API tests. 99 backend tests total.
+- ✅ Trade API returns `metrics`; journal list shows Net P&L and R; detail page has a Risk & results panel.
 ## Phase 6 — Accounts & ownership
 ## Phase 7 — Strategies, filtering, analytics
 ## Phase 8 — CSV / PDF reports

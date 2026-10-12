@@ -62,7 +62,49 @@ class ExecutionOut(BaseModel):
     fees: Decimal
 
 
-class TradeOut(BaseModel):
+class TargetRROut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    sequence: int
+    price: Decimal
+    reward_to_risk: Decimal | None
+
+
+class MarketPriceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    price: Decimal
+    source: str
+    as_of: datetime
+
+
+class TradeMetricsOut(BaseModel):
+    """Calculated by app/domain/calculations.py. None = unavailable; see `unavailable` for why."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    entered_quantity: Decimal
+    exited_quantity: Decimal
+    open_quantity: Decimal
+    average_entry_price: Decimal | None
+    average_exit_price: Decimal | None
+    planned_risk_per_unit: Decimal | None
+    planned_risk_amount: Decimal | None
+    initial_risk_amount: Decimal | None
+    targets: list[TargetRROut]
+    gross_realized_pnl: Decimal | None
+    fees_counted: Decimal | None
+    total_fees: Decimal
+    net_realized_pnl: Decimal | None
+    realized_r: Decimal | None
+    unrealized_pnl: Decimal | None
+    unrealized_price: MarketPriceOut | None
+    unavailable: dict[str, str]
+
+
+class TradeBase(BaseModel):
+    """Stored trade fields, read straight from the database model."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -84,6 +126,10 @@ class TradeOut(BaseModel):
     reflection: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class TradeOut(TradeBase):
+    metrics: TradeMetricsOut
 
 
 TradeStatus = Literal["planned", "open", "partially_closed", "closed"]

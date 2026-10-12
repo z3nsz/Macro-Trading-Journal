@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../api/client'
 import { deleteTrade, getTrade } from '../api/journal'
-import { formatDateTime, formatMoney, formatPrice, trimDecimal } from '../lib/format'
+import { formatDateTime, formatMoney, formatPrice, formatR, pnlColor, trimDecimal } from '../lib/format'
 import { instrumentLabel } from '../lib/trade'
 import { AccountTypeBadge, Button, Card, DirectionBadge, EmptyState, ErrorBox, Loading, StatusBadge } from '../components/ui'
 
@@ -35,6 +35,7 @@ export function TradeDetailPage() {
   }
 
   const t = trade.data
+  const m = t.metrics
   const fmt = t.instrument.price_format
   const price = (v: string | null | undefined) => formatPrice(v, fmt)
 
@@ -72,11 +73,21 @@ export function TradeDetailPage() {
             <Row label="Planned entry">{price(t.planned_entry_price)}</Row>
             <Row label="Initial stop">{price(t.initial_stop_price)}</Row>
             {t.current_stop_price && <Row label="Current stop">{price(t.current_stop_price)}</Row>}
-            {t.targets.map((x) => (
-              <Row key={x.sequence} label={`TP${x.sequence}`}>{price(x.price)}</Row>
+            {m.targets.map((x) => (
+              <Row key={x.sequence} label={`TP${x.sequence}`}>
+                {price(x.price)}{' '}
+                <span className="text-xs text-slate-500">
+                  ({x.reward_to_risk ? `${x.reward_to_risk} R:R` : 'R:R unavailable'})
+                </span>
+              </Row>
             ))}
+            <Row label="Planned risk">
+              <Metric value={m.planned_risk_amount && formatMoney(m.planned_risk_amount)} reason={m.unavailable.planned_risk} />
+            </Row>
           </dl>
-          <p className="mt-3 text-xs text-slate-400">Planned reward-to-risk and dollar risk are calculated in Milestone 5.</p>
+          <p className="mt-3 text-xs text-slate-400">
+            Reward-to-risk = distance to target ÷ distance to initial stop, from the planned entry.
+          </p>
         </Card>
 
         <Card>
@@ -104,6 +115,43 @@ export function TradeDetailPage() {
         </Card>
       </div>
 
+      <Card>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Risk &amp; results</h2>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+          <Row label="Initial risk">
+            <Metric value={m.initial_risk_amount && formatMoney(m.initial_risk_amount)} reason={m.unavailable.initial_risk} />
+          </Row>
+          <Row label="Avg entry">{price(m.average_entry_price)}</Row>
+          <Row label="Avg exit">{price(m.average_exit_price)}</Row>
+          <Row label="Open qty">{trimDecimal(m.open_quantity)}</Row>
+          <Row label="Gross realized">
+            <Metric value={m.gross_realized_pnl && formatMoney(m.gross_realized_pnl)} reason={m.unavailable.realized_pnl} className={pnlColor(m.gross_realized_pnl)} />
+          </Row>
+          <Row label="Fees counted">
+            <Metric value={m.fees_counted && formatMoney(m.fees_counted)} reason={m.unavailable.realized_pnl} />
+          </Row>
+          <Row label="Net realized">
+            <Metric value={m.net_realized_pnl && formatMoney(m.net_realized_pnl)} reason={m.unavailable.realized_pnl} className={`font-semibold ${pnlColor(m.net_realized_pnl)}`} />
+          </Row>
+          <Row label="Realized R">
+            <Metric value={m.realized_r && formatR(m.realized_r)} reason={m.unavailable.realized_r} className={`font-semibold ${pnlColor(m.realized_r)}`} />
+          </Row>
+          <Row label="Unrealized">
+            <Metric
+              value={m.unrealized_pnl && `${formatMoney(m.unrealized_pnl)} (${m.unrealized_price?.source}, ${formatDateTime(m.unrealized_price?.as_of)})`}
+              reason={m.unavailable.unrealized_pnl}
+              className={pnlColor(m.unrealized_pnl)}
+            />
+          </Row>
+          <Row label="All fees paid">{formatMoney(m.total_fees)}</Row>
+        </dl>
+        <p className="mt-3 text-xs text-slate-400">
+          Net = gross − exit fees − the closed share of entry fees. Realized R = net realized P&amp;L ÷ initial risk
+          (|avg entry − initial stop| × quantity × {Number(t.instrument.point_value).toLocaleString()} $/point).
+          {t.status === 'partially_closed' && ' Partially closed: results so far, for the closed portion.'}
+        </p>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         <TextCard title="Thesis" text={t.thesis} />
         <TextCard title="Catalyst / economic event" text={t.catalyst} />
@@ -121,6 +169,16 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <dt className="text-slate-500">{label}</dt>
       <dd>{children}</dd>
     </>
+  )
+}
+
+/** A calculated value, or "Unavailable" with the reason — never an invented number. */
+function Metric({ value, reason, className = '' }: { value: string | null; reason?: string; className?: string }) {
+  if (value) return <span className={className}>{value}</span>
+  return (
+    <span className="text-slate-400" title={reason}>
+      Unavailable{reason && <span className="block text-xs">{reason}</span>}
+    </span>
   )
 }
 

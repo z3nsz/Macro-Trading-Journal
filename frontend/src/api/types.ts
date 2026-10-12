@@ -57,6 +57,27 @@ export interface Execution {
   fees: Decimal
 }
 
+/** Calculated by the backend (app/domain/calculations.py). null = unavailable; see `unavailable`. */
+export interface TradeMetrics {
+  entered_quantity: Decimal
+  exited_quantity: Decimal
+  open_quantity: Decimal
+  average_entry_price: Decimal | null
+  average_exit_price: Decimal | null
+  planned_risk_per_unit: Decimal | null
+  planned_risk_amount: Decimal | null
+  initial_risk_amount: Decimal | null
+  targets: { sequence: number; price: Decimal; reward_to_risk: Decimal | null }[]
+  gross_realized_pnl: Decimal | null
+  fees_counted: Decimal | null
+  total_fees: Decimal
+  net_realized_pnl: Decimal | null
+  realized_r: Decimal | null
+  unrealized_pnl: Decimal | null
+  unrealized_price: { price: Decimal; source: string; as_of: string } | null
+  unavailable: Record<string, string>
+}
+
 export interface Trade {
   id: number
   portfolio: { id: number; name: string; account_type: AccountType }
@@ -77,6 +98,7 @@ export interface Trade {
   reflection: string | null
   created_at: string
   updated_at: string
+  metrics: TradeMetrics
 }
 
 export interface FillInput {

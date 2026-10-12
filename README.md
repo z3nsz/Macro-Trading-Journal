@@ -130,6 +130,23 @@ Seeded from `backend/app/seed.py`, checked against CME Group contract-spec pages
 
 Specs can change; each row stores its `spec_source_url` and `spec_verified_on` date.
 
+## Calculations
+
+Defined once in `backend/app/domain/calculations.py` and returned by the API as `trade.metrics`.
+`m` = point value (USD per 1.0 price move), `s` = +1 long / −1 short.
+
+| Metric | Formula |
+|---|---|
+| Planned reward-to-risk (per target) | \|target − planned entry\| ÷ \|planned entry − initial stop\| |
+| Initial dollar risk | \|avg entry − initial stop\| × entered qty × m (fees excluded) |
+| Gross realized P&L | s × (avg exit − avg entry) × exited qty × m |
+| Net realized P&L | gross − exit fees − entry fees × (exited ÷ entered) |
+| Realized R | net realized P&L ÷ initial dollar risk |
+| Unrealized P&L | only with a sourced, timestamped market price (none integrated yet) |
+
+Money is rounded to cents half-up at the end; R and R:R to 2 decimals. Missing inputs give
+"unavailable" with a reason — never 0.
+
 ## API (so far)
 
 Interactive docs: http://127.0.0.1:8000/docs
@@ -185,7 +202,7 @@ documentation (free access, API key, rate limits, delay, licensing / redistribut
 2. ✅ Frontend + backend skeleton, first API request
 3. ✅ PostgreSQL + migrations
 4. ✅ Journal for a local development user (data model, API, screens)
-5. Risk and P&L calculations (tested)
+5. ✅ Risk and P&L calculations (tested)
 6. Secure accounts and ownership
 7. Strategies, filtering, analytics
 8. CSV and PDF class reports
