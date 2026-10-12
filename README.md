@@ -62,6 +62,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 cp .env.example .env          # then replace CHANGE_ME with your password
 .venv/bin/alembic upgrade head  # create the tables
+.venv/bin/python -m app.seed    # load futures specs + local dev user (safe to re-run)
 ```
 
 ### 3. Frontend
@@ -84,6 +85,39 @@ cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000
 # Terminal 2 — frontend on http://localhost:5173
 cd frontend && npm run dev
 ```
+
+## Data model
+
+```
+users ─┬─< portfolios ─┬─< trades >── instruments ──< futures_contracts
+       │               │    │  │
+       └─< strategies >┼────┘  ├──< trade_targets   (TP1, TP2, …)
+                       │       └──< executions      (actual entry/exit fills)
+                       └─< cash_flows (deposits / withdrawals — never counted as P&L)
+```
+
+- Prices are stored in the exchange's **quoted unit** (ES in index points, ZC in US cents per bushel).
+  `instruments.point_value` = USD per 1.0 move in that quote, per contract/share.
+- `trades.initial_stop_price` is preserved; later stop changes go in `current_stop_price`.
+- Money is `NUMERIC(18,2)`, prices `NUMERIC(20,10)` — never floating point.
+- PostgreSQL check constraints reject impossible data (negative quantities, a long stop above entry, …).
+
+### Futures reference data
+
+Seeded from `backend/app/seed.py`, checked against CME Group contract-spec pages on 2026-10-11:
+
+| Symbol | Quoted in | Tick | $ / point | $ / tick |
+|---|---|---|---|---|
+| ES / MES | index points | 0.25 | 50 / 5 | 12.50 / 1.25 |
+| NQ / MNQ | index points | 0.25 | 20 / 2 | 5.00 / 0.50 |
+| CL / MCL | USD per barrel | 0.01 | 1,000 / 100 | 10.00 / 1.00 |
+| GC | USD per troy oz | 0.10 | 100 | 10.00 |
+| ZN | points & ½ 32nds | 1/64 = 0.015625 | 1,000 | 15.625 |
+| ZB | points & 32nds | 1/32 = 0.03125 | 1,000 | 31.25 |
+| 6E | USD per EUR | 0.00005 | 125,000 | 6.25 |
+| ZC | US cents per bushel | 0.25¢ | 50 per cent | 12.50 |
+
+Specs can change; each row stores its `spec_source_url` and `spec_verified_on` date.
 
 ## Database commands
 
@@ -118,7 +152,7 @@ documentation (free access, API key, rate limits, delay, licensing / redistribut
 1. ✅ Inspect folder, architecture
 2. ✅ Frontend + backend skeleton, first API request
 3. ✅ PostgreSQL + migrations
-4. Journal for a local development user
+4. ⏳ Journal for a local development user (4a data model ✅)
 5. Risk and P&L calculations (tested)
 6. Secure accounts and ownership
 7. Strategies, filtering, analytics

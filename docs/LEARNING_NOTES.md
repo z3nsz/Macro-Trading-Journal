@@ -67,3 +67,26 @@ Short explanations of concepts as they come up in the project.
   Each test runs inside a transaction that is rolled back, so tests never affect each other or real data.
 - **Graceful degradation**: if the database is down, `/api/health` still answers (`"degraded"`) instead
   of crashing. The same principle will keep the journal working when market-data providers fail.
+
+## Milestone 4a — Journal data model
+
+- **Normalization**: store each fact once. ES's $50/point lives in one `instruments` row, not copied into
+  every trade, so a single verified value feeds every calculation.
+- **Foreign key**: a column pointing to another table's row (`trades.portfolio_id → portfolios.id`).
+  `ondelete` decides what happens when the parent is deleted:
+  - `CASCADE` — delete children too (delete a portfolio → its trades and executions go).
+  - `RESTRICT` — refuse (can't delete ES while trades use it).
+  - `SET NULL` — keep the child, clear the link (delete a strategy → trades keep existing, unassigned).
+- **One-to-many**: one trade has many executions. Drawn as `trades ──< executions`.
+- **Check constraint**: a rule PostgreSQL enforces on every row (e.g. `quantity > 0`, a long's stop below entry).
+  We use strings + check constraints instead of PostgreSQL ENUM types because they are easier to extend later.
+- **Trade vs. execution**: the trade is the plan and reasoning; executions are actual fills.
+  Partial exit = several exit executions. Average entry, realized P&L, etc. are *calculated* from executions.
+- **Initial vs. current stop**: R-multiples measure results against the risk you planned when you entered,
+  so the initial stop is never overwritten.
+- **Quoted price units differ by contract**: ES in index points, CL in $/barrel, ZN in points and 32nds,
+  ZC in *cents* per bushel. `point_value` converts a 1.0 move in the quote into dollars per contract:
+  `dollar P&L = price change × point_value × quantity`. Tick value = `tick_size × point_value`.
+- **Seed data**: reference data loaded by a script. Idempotent = running it twice gives the same result.
+- **Testing the tests**: we temporarily broke NQ's multiplier and confirmed a test failed. A test that can't
+  fail proves nothing.

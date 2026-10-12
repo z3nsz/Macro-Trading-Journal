@@ -20,8 +20,14 @@ Legend: ✅ done · ⏳ in progress · ⬜ not started
 - ✅ Tests rebuild the test DB from migrations and roll back each test (5 passing)
 
 ## Phase 4 — Journal (local dev user)
-- ⬜ Portfolios, instruments (stocks + futures metadata), trades, executions
-- ⬜ CRUD endpoints + journal UI
+- ✅ **4a** Data model + migration 002: portfolios, cash_flows, strategies, instruments,
+  futures_contracts, trades, trade_targets, executions. DB check constraints.
+  11 CME futures seeded (`python -m app.seed`), verified against CME spec pages 2026-10-11.
+  Local dev user `dev@localhost.test`. 30 tests passing.
+- ⬜ **4b** API endpoints: portfolios, instruments/contracts, trades (create/read/update/delete,
+  search & filter), one entry + one exit execution; validation (tick size, direction, timestamps)
+- ⬜ **4c** Journal UI: trade list, trade form, trade detail
+- ⬜ Later: attachments/screenshots (needs upload validation), tags, stop-change history, options
 
 ## Phase 5 — Risk & P&L calculations
 ## Phase 6 — Accounts & ownership
