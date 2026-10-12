@@ -30,7 +30,10 @@ Legend: ✅ done · ⏳ in progress · ⬜ not started
   derived status). Initial stop locked after entry. Ownership → 404. 78 tests passing.
 - ⬜ Cash-flow (deposit/withdrawal) endpoints — with the portfolio screen
 - ⬜ Editing individual executions when a trade has multiple fills (PUT returns 409 for now)
-- ⬜ **4c** Journal UI: trade list, trade form, trade detail
+- ✅ **4c** Journal UI (React Router): Setup page (portfolios, strategies), journal list with
+  search + filters in the URL (table on desktop, cards on phones), trade form (new/edit, inline
+  contract + stock creation, up to 5 targets, one entry + one exit, 32nds hints, server errors shown
+  per field, initial stop locked after entry), trade detail with delete. Vitest: 8 format tests.
 - ⬜ Later: attachments/screenshots (needs upload validation), tags, stop-change history, options
 
 ## Phase 5 — Risk & P&L calculations

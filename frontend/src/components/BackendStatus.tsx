@@ -1,60 +1,32 @@
 import { useQuery } from '@tanstack/react-query'
 import { getHealth } from '../api/health'
 
+/** Small indicator in the header: is the backend up, and can it reach the database? */
 export function BackendStatus() {
-  const { data, isPending, isError, error, refetch, isFetching } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ['health'],
     queryFn: getHealth,
     retry: false,
-    refetchInterval: 10_000, // re-check every 10 s so the card reacts if the backend stops
+    refetchInterval: 15_000,
   })
 
-  if (isPending) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-5 text-slate-500">
-        Checking backend connection…
-      </div>
-    )
-  }
-
+  let dot = 'bg-slate-300'
+  let label = 'Checking…'
   if (isError) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-5">
-        <p className="font-semibold text-red-700">Backend not reachable</p>
-        <p className="mt-1 text-sm text-red-600">{error.message}</p>
-        <p className="mt-1 text-sm text-red-600">
-          Is the FastAPI server running on port 8000?
-        </p>
-        <button
-          onClick={() => refetch()}
-          className="mt-3 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-        >
-          {isFetching ? 'Retrying…' : 'Retry'}
-        </button>
-      </div>
-    )
+    dot = 'bg-red-500'
+    label = 'Backend offline'
+  } else if (!isPending && data.database !== 'connected') {
+    dot = 'bg-amber-500'
+    label = 'Database unavailable'
+  } else if (!isPending) {
+    dot = 'bg-emerald-500'
+    label = 'Connected'
   }
-
-  const dbOk = data.database === 'connected'
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
-      <p className="font-semibold text-emerald-700">Backend connected</p>
-      {!dbOk && (
-        <p className="mt-2 rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-800">
-          Database unavailable — is PostgreSQL running?
-        </p>
-      )}
-      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm text-emerald-900">
-        <dt className="text-emerald-700">App</dt>
-        <dd>{data.app}</dd>
-        <dt className="text-emerald-700">Environment</dt>
-        <dd>{data.environment}</dd>
-        <dt className="text-emerald-700">Database</dt>
-        <dd className={dbOk ? '' : 'font-semibold text-amber-700'}>{data.database}</dd>
-        <dt className="text-emerald-700">Server time</dt>
-        <dd>{new Date(data.server_time).toLocaleString()}</dd>
-      </dl>
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500" title={label}>
+      <span className={`h-2 w-2 rounded-full ${dot}`} />
+      <span className="hidden sm:inline">{label}</span>
+    </span>
   )
 }

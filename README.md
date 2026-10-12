@@ -28,6 +28,8 @@ track portfolio performance, and share read-only class reports with a professor.
 | UI | React 19 + TypeScript + Vite | Component-based UI with type checking |
 | Styling | Tailwind CSS v4 | Utility classes, easy responsive layouts |
 | Server state | TanStack Query | Loading / error / caching for every request |
+| Routing | React Router 8 | Pages at `/trades`, `/trades/:id`, `/trades/new`, `/setup` |
+| Frontend tests | Vitest | Formatting helpers (32nds, money, time zones) |
 | Charts | Recharts (planned) | Simple React charts for equity/drawdown |
 | API | FastAPI + Pydantic | Automatic validation and interactive docs at `/docs` |
 | Database | PostgreSQL 18 + SQLAlchemy 2.1 + Alembic | Relational data + versioned migrations |
@@ -72,6 +74,14 @@ cp .env.example .env          # then replace CHANGE_ME with your password
 cd frontend
 npm install
 ```
+
+## Using the journal
+
+1. Open http://localhost:5173 → **Portfolios & strategies** → create a portfolio (and optionally strategies).
+2. **Journal → + New trade** → pick product and contract (add a contract month with the exchange's
+   last trading day the first time), plan, reasoning, and optionally the entry/exit fills.
+3. Treasury futures (ZN, ZB) are typed as decimals; the form shows the 32nds quote (e.g. `112'16.5`).
+4. Times are entered in your local time and stored in UTC.
 
 ## Run
 
@@ -157,7 +167,7 @@ Stop / start PostgreSQL: `brew services stop postgresql@18` / `brew services sta
 
 ```bash
 cd backend && .venv/bin/python -m pytest -q    # needs PostgreSQL running; uses macro_journal_test
-cd frontend && npm run build && npm run lint
+cd frontend && npm test && npm run build && npm run lint
 ```
 
 ## Data sources
@@ -174,7 +184,7 @@ documentation (free access, API key, rate limits, delay, licensing / redistribut
 1. ✅ Inspect folder, architecture
 2. ✅ Frontend + backend skeleton, first API request
 3. ✅ PostgreSQL + migrations
-4. ⏳ Journal for a local development user (4a data model ✅, 4b API ✅)
+4. ✅ Journal for a local development user (data model, API, screens)
 5. Risk and P&L calculations (tested)
 6. Secure accounts and ownership
 7. Strategies, filtering, analytics

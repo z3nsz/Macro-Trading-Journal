@@ -1,17 +1,24 @@
-import { BackendStatus } from './components/BackendStatus'
+import { Navigate, Route, Routes } from 'react-router'
+import { Layout } from './components/Layout'
+import { EmptyState } from './components/ui'
+import { SetupPage } from './pages/SetupPage'
+import { TradeDetailPage } from './pages/TradeDetailPage'
+import { TradeFormPage } from './pages/TradeFormPage'
+import { TradesPage } from './pages/TradesPage'
 
+// URL → page. Every page renders inside <Layout> (header + navigation).
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-4">
-          <h1 className="text-xl font-bold">Macro Trading Journal</h1>
-          <p className="text-sm text-slate-500">Milestone 3 — frontend ↔ backend ↔ database</p>
-        </div>
-      </header>
-      <main className="mx-auto max-w-4xl px-4 py-6">
-        <BackendStatus />
-      </main>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Navigate to="/trades" replace />} />
+        <Route path="trades" element={<TradesPage />} />
+        <Route path="trades/new" element={<TradeFormPage />} />
+        <Route path="trades/:tradeId" element={<TradeDetailPage />} />
+        <Route path="trades/:tradeId/edit" element={<TradeFormPage />} />
+        <Route path="setup" element={<SetupPage />} />
+        <Route path="*" element={<EmptyState title="Page not found" />} />
+      </Route>
+    </Routes>
   )
 }

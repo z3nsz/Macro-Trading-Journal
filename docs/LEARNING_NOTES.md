@@ -113,3 +113,22 @@ Short explanations of concepts as they come up in the project.
 - **Bugs met**: (1) Pydantic checks a `pattern` before `to_upper`, so `aapl` was rejected → allow lowercase
   in the pattern. (2) Replacing a trade's targets could insert the new TP1 before deleting the old TP1,
   breaking the unique rule → delete old rows first, then insert.
+
+## Milestone 4c — Journal screens
+
+- **Routing**: React Router maps URLs to pages (`/trades/:tradeId` → `TradeDetailPage`). `:tradeId` is read
+  with `useParams()`. `<Layout>` holds the header; `<Outlet />` is where the current page appears.
+- **Filters in the URL** (`useSearchParams`): `/trades?status=open&q=cpi` can be bookmarked and survives
+  the back button.
+- **Controlled form**: input `value` comes from state; `onChange` updates state. We keep everything as
+  strings exactly as typed and convert once on submit (`toInput`).
+- **Mutation + invalidation**: after saving, `invalidateQueries(['trades'])` marks the cached list stale so it
+  reloads — the list never shows outdated data.
+- **Two layers of validation**: the browser's `required` stops obviously incomplete forms instantly; the
+  server's rules are the real authority and their messages are shown next to the matching field.
+- **Responsive design**: Tailwind's `md:` prefix applies a style from 768 px up. The journal shows a table on
+  desktop (`hidden md:block`) and cards on phones (`md:hidden`).
+- **Debouncing**: the search box waits 300 ms after you stop typing before querying the server.
+- **Deriving instead of syncing**: rather than an effect that copies "first portfolio" into state, we
+  compute `form.portfolio_id || firstPortfolio` during render — simpler and avoids an extra render.
+- **Money formatting**: fees display as `$4.20` with string-based formatting, never `$4.2`.
