@@ -24,8 +24,12 @@ Legend: ✅ done · ⏳ in progress · ⬜ not started
   futures_contracts, trades, trade_targets, executions. DB check constraints.
   11 CME futures seeded (`python -m app.seed`), verified against CME spec pages 2026-10-11.
   Local dev user `dev@localhost.test`. 30 tests passing.
-- ⬜ **4b** API endpoints: portfolios, instruments/contracts, trades (create/read/update/delete,
-  search & filter), one entry + one exit execution; validation (tick size, direction, timestamps)
+- ✅ **4b** API: portfolios (CRUD), strategies (list/create), instruments + stock creation,
+  futures contracts, trades (CRUD, search, filters, date range). Domain rules in
+  `app/domain/trade_rules.py` (tick grid, whole contracts, stop/target side, fill order/size/time,
+  derived status). Initial stop locked after entry. Ownership → 404. 78 tests passing.
+- ⬜ Cash-flow (deposit/withdrawal) endpoints — with the portfolio screen
+- ⬜ Editing individual executions when a trade has multiple fills (PUT returns 409 for now)
 - ⬜ **4c** Journal UI: trade list, trade form, trade detail
 - ⬜ Later: attachments/screenshots (needs upload validation), tags, stop-change history, options
 

@@ -16,7 +16,10 @@ from app.config import settings
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,  # quietly replace connections that went stale
-    connect_args={"connect_timeout": 3},  # fail fast instead of hanging if Postgres is down
+    connect_args={
+        "connect_timeout": 3,  # fail fast instead of hanging if Postgres is down
+        "options": "-c timezone=UTC",  # return every timestamp in UTC, whatever the machine's timezone
+    },
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)

@@ -17,9 +17,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.config import settings
 from app.db import get_db
 from app.main import app
+from app.models import User
+from app.seed import seed_futures
 
 BACKEND_DIR = __file__.rsplit("/tests/", 1)[0]
 
@@ -57,3 +60,28 @@ def client(db: Session) -> Iterator[TestClient]:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def make_user(db: Session, email: str) -> User:
+    user = User(email=email, display_name=email.split("@")[0])
+    db.add(user)
+    db.flush()
+    return user
+
+
+def act_as(user: User) -> None:
+    """Make API requests run as `user` (stands in for logging in)."""
+    app.dependency_overrides[get_current_user] = lambda: user
+
+
+@pytest.fixture
+def alice(db: Session, client: TestClient) -> User:
+    seed_futures(db)
+    user = make_user(db, "alice@example.com")
+    act_as(user)
+    return user
+
+
+@pytest.fixture
+def bob(db: Session) -> User:
+    return make_user(db, "bob@example.com")

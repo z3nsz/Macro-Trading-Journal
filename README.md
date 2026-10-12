@@ -20,7 +20,8 @@ track portfolio performance, and share read-only class reports with a professor.
 - **backend/** — FastAPI. Validation, permissions, calculations, database access.
   - `app/api/` HTTP endpoints (thin) · `app/models/` database tables (SQLAlchemy) ·
     `app/db.py` connection/session · `alembic/versions/` migrations ·
-    `app/domain/` pure calculations (planned) · `app/services/` glue (planned)
+    `app/schemas/` request/response shapes · `app/services/` ownership + data access ·
+    `app/domain/` pure rules and calculations (no DB, no web)
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -119,6 +120,27 @@ Seeded from `backend/app/seed.py`, checked against CME Group contract-spec pages
 
 Specs can change; each row stores its `spec_source_url` and `spec_verified_on` date.
 
+## API (so far)
+
+Interactive docs: http://127.0.0.1:8000/docs
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Backend + database status |
+| GET / POST | `/api/portfolios` | List / create your portfolios |
+| GET / PATCH / DELETE | `/api/portfolios/{id}` | Read / edit / delete (deletes its trades) |
+| GET / POST | `/api/strategies` | List / create your strategies |
+| GET | `/api/instruments?asset_class=&q=` | Futures (verified specs) and stocks |
+| POST | `/api/instruments/stocks` | Add a stock symbol |
+| GET / POST | `/api/instruments/{id}/contracts` | Futures contract months (e.g. ESZ2026) |
+| GET | `/api/trades?portfolio_id=&status=&direction=&asset_class=&instrument_id=&strategy_id=&q=&date_from=&date_to=` | Search and filter your trades |
+| POST | `/api/trades` | Create a trade (optional one entry + one exit) |
+| GET / PUT / DELETE | `/api/trades/{id}` | Read / replace / delete |
+
+Conventions: decimals are JSON **strings** (`"5000.25"`); timestamps must include a timezone and are
+returned in UTC; validation errors are `422 {"detail": "Validation failed", "errors": [{"field", "message"}]}`;
+another user's data returns `404`. Until Phase 6 every request runs as the local dev user.
+
 ## Database commands
 
 ```bash
@@ -152,7 +174,7 @@ documentation (free access, API key, rate limits, delay, licensing / redistribut
 1. ✅ Inspect folder, architecture
 2. ✅ Frontend + backend skeleton, first API request
 3. ✅ PostgreSQL + migrations
-4. ⏳ Journal for a local development user (4a data model ✅)
+4. ⏳ Journal for a local development user (4a data model ✅, 4b API ✅)
 5. Risk and P&L calculations (tested)
 6. Secure accounts and ownership
 7. Strategies, filtering, analytics

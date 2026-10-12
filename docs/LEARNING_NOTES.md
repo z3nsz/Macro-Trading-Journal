@@ -90,3 +90,26 @@ Short explanations of concepts as they come up in the project.
 - **Seed data**: reference data loaded by a script. Idempotent = running it twice gives the same result.
 - **Testing the tests**: we temporarily broke NQ's multiplier and confirmed a test failed. A test that can't
   fail proves nothing.
+
+## Milestone 4b — Journal API
+
+- **Layers** (each only talks to the one below):
+  `api/` (HTTP in/out) → `services/` (ownership, database) → `domain/` (pure rules) ; `schemas/` = data shapes.
+  Pure rules are trivially testable: 26 rule tests run in 0.02 s with no database.
+- **CRUD ↔ HTTP**: Create = `POST`, Read = `GET`, Update = `PUT` (replace all) / `PATCH` (change some),
+  Delete = `DELETE`.
+- **Status codes**: 201 Created, 204 No Content, 404 Not Found, 409 Conflict, 422 Unprocessable (invalid data),
+  503 Service Unavailable.
+- **Query parameters**: the `?status=open&q=cpi` part of a URL — used for filtering and search.
+- **Path parameters**: the `{trade_id}` in `/api/trades/{trade_id}`.
+- **Ownership checks**: every query includes `WHERE portfolio.user_id = current_user`. Someone else's trade
+  gives 404 (not 403), so outsiders can't even learn it exists.
+- **Dependency override**: `get_current_user` is a single function every endpoint depends on. Today it
+  returns the dev user; tests swap it to act as Alice or Bob; Phase 6 swaps in real login.
+- **Derived data**: status is calculated from fills, never typed by hand, so it can't contradict them.
+- **Decimals in JSON as strings**: JSON numbers are floats in JavaScript; `"5000.25"` keeps it exact.
+- **UTC everywhere**: the database stores instants; the server returns them in UTC (`Z`);
+  the UI will convert to the viewer's local time for display.
+- **Bugs met**: (1) Pydantic checks a `pattern` before `to_upper`, so `aapl` was rejected → allow lowercase
+  in the pattern. (2) Replacing a trade's targets could insert the new TP1 before deleting the old TP1,
+  breaking the unique rule → delete old rows first, then insert.
